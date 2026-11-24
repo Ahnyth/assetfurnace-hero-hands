@@ -1,0 +1,19 @@
+# The same settings as AssetFurnace's own ruff.toml, so the scripts and tests taken from it lint as they do there.
+
+target-version = "py311"
+
+[lint]
+ignore = [
+    # A broad except is deliberate here: a setup check reports any failure rather than crashing.
+    "BLE001",
+    # int(round(x)) guards numpy floats, whose round() does not always return an int.
+    "RUF046",
+]
+
+[lint.isort]
+# AssetFurnace's own package, found in the install at run time (launcher.py), sorts as it does there.
+known-first-party = ["image_to_3dlab"]
+
+[lint.per-file-ignores]
+# Tests favour plain, readable setup over the idioms these rules push for.
+"tests/**" = ["B008", "C408", "DTZ", "FLY002", "PLW1510", "RUF012", "RUF015", "SIM117"]

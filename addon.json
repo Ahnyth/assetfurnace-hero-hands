@@ -1,0 +1,85 @@
+{
+  "schema": 1,
+  "id": "hero-hands",
+  "name": "Hero hands",
+  "version": "0.1.0",
+  "author": {
+    "name": "Ahnyth",
+    "url": "https://github.com/Ahnyth"
+  },
+  "licence": "Apache-2.0",
+  "summary": "Gives a rigged figure hands with real fingers: each hand is redrawn flat from the front picture, built on its own with Pixal3D, checked for five digits and grafted on at the wrist, keeping the skeleton.",
+  "runs": "local",
+  "needs": {
+    "assetfurnace": ">=0.6.0",
+    "blender": ">=4.2",
+    "setup": "Pixal3D (with its own clean-up), the picture editor FLUX.2 [klein] and the Hero face upscaler, all from AssetFurnace's Setup page"
+  },
+  "models": [
+    {
+      "name": "FLUX.2 [klein] 4B (edit mode, with the Qwen3-4B text encoder): AssetFurnace's own picture editor, redraws each hand flat",
+      "licence": "Apache-2.0",
+      "size": "set up on AssetFurnace's Setup page; this add-on downloads nothing"
+    },
+    {
+      "name": "Pixal3D (raven38/pixal3d-sv-q8_0-v1): AssetFurnace's own 3D model, builds each hand",
+      "licence": "MIT (code and flow weights); DINOv3 License (bundled image encoder)",
+      "size": "set up on AssetFurnace's Setup page; this add-on downloads nothing"
+    },
+    {
+      "name": "Real-ESRGAN x4plus: AssetFurnace's upscaler, enlarges the hand's crop",
+      "licence": "BSD-3-Clause",
+      "size": "67 MB, set up on AssetFurnace's Setup page; this add-on downloads nothing"
+    }
+  ],
+  "tools": [
+    {
+      "id": "hands",
+      "label": "Rebuild the hands",
+      "hint": "Give it the GLB from Rig and the front picture it was built from: it writes the figure with hands that have five fingers, built alone and grafted at the wrist, same skeleton and body weights.",
+      "inputs": [
+        {
+          "id": "model",
+          "type": "model",
+          "label": "Rigged figure (GLB from Rig)"
+        },
+        {
+          "id": "picture",
+          "type": "picture",
+          "label": "Its front picture"
+        },
+        {
+          "id": "left",
+          "type": "choice",
+          "label": "Left hand",
+          "choices": [
+            "mirror",
+            "own"
+          ]
+        },
+        {
+          "id": "look",
+          "type": "text",
+          "label": "What the hands wear (optional, e.g. black fingerless gloves)",
+          "optional": true
+        }
+      ],
+      "run": [
+        "{blender}",
+        "--background",
+        "--factory-startup",
+        "--python-exit-code",
+        "1",
+        "--python",
+        "addon_run.py",
+        "--",
+        "{out}",
+        "{model}",
+        "{picture}",
+        "{left}",
+        "{look}"
+      ],
+      "makes": "glb"
+    }
+  ]
+}
