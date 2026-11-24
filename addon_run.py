@@ -24,8 +24,9 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 
 LEFT = ("mirror", "own")  # mirror: the left hand is the right one mirrored; own: drawn and built from its own crop
-PAINT = ("match the figure", "as built")  # match: the new hands take the tone of the figure's own hands (Pixal3D's
-# clean-up paints a built hand darker and far more saturated than its drawing); as built: left as it came
+PAINT = ("match the figure", "as built")  # match: the new hands take the tone of their drawing, which was drawn to
+# match the figure (Pixal3D's clean-up paints a built hand darker and far more saturated than its drawing); as built:
+# left as it came
 NO_LOOK = {"", "-", "none", "as in the picture"}
 
 
