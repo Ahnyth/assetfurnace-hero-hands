@@ -58,6 +58,15 @@
           ]
         },
         {
+          "id": "paint",
+          "type": "choice",
+          "label": "Hand paint",
+          "choices": [
+            "match the figure",
+            "as built"
+          ]
+        },
+        {
           "id": "look",
           "type": "text",
           "label": "What the hands wear (optional, e.g. black fingerless gloves)",
@@ -77,6 +86,7 @@
         "{model}",
         "{picture}",
         "{left}",
+        "{paint}",
         "{look}"
       ],
       "makes": "glb"

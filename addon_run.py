@@ -8,7 +8,7 @@ through `launcher.py`. Its steps write into `{out}/work` (the drawings, the hand
 figure with its new hands is copied to `{out}/{stem}.glb`, the name AssetFurnace looks for, and its numbers to
 `{out}/{stem}.hands.json`.
 
-    blender -b --factory-startup -P addon_run.py -- OUT_DIR MODEL PICTURE LEFT [LOOK]
+    blender -b --factory-startup -P addon_run.py -- OUT_DIR MODEL PICTURE LEFT PAINT [LOOK]
 """
 
 from __future__ import annotations
@@ -24,6 +24,8 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 
 LEFT = ("mirror", "own")  # mirror: the left hand is the right one mirrored; own: drawn and built from its own crop
+PAINT = ("match the figure", "as built")  # match: the new hands take the tone of the figure's own hands (Pixal3D's
+# clean-up paints a built hand darker and far more saturated than its drawing); as built: left as it came
 NO_LOOK = {"", "-", "none", "as in the picture"}
 
 
@@ -45,14 +47,15 @@ def _pick(name: str, value: str, choices: Sequence[str]) -> str:
 def plan(argv: Sequence[str]) -> Job:
     """The job from the arguments after Blender's `--`."""
     args = list(argv[list(argv).index("--") + 1:] if "--" in argv else argv)
-    if len(args) not in (4, 5):
-        raise SystemExit("usage: addon_run.py -- OUT_DIR MODEL PICTURE LEFT [LOOK]")
+    if len(args) not in (5, 6):
+        raise SystemExit("usage: addon_run.py -- OUT_DIR MODEL PICTURE LEFT PAINT [LOOK]")
     out_dir, model, picture = Path(args[0]), Path(args[1]), Path(args[2])
     left = _pick("left hand", args[3], LEFT)
-    look = args[4].strip() if len(args) == 5 else ""
+    paint = "match" if _pick("hand paint", args[4], PAINT) == PAINT[0] else "keep"
+    look = args[5].strip() if len(args) == 6 else ""
     stem = out_dir.name
     work = out_dir / "work"
-    cmd = [str(model), str(picture), "--out", str(work), "--left", left]
+    cmd = [str(model), str(picture), "--out", str(work), "--left", left, "--hand-paint", paint]
     if look.lower() not in NO_LOOK:
         cmd += ["--look", look]
     return Job(cmd, work, work / f"{model.stem}_hands.glb", out_dir / f"{stem}.glb")

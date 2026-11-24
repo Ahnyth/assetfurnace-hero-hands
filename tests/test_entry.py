@@ -18,7 +18,7 @@ def run_args(*rest):
 
 
 def test_the_job_writes_the_glb_the_studio_looks_for():
-    job = addon_run.plan(run_args("mirror"))
+    job = addon_run.plan(run_args("mirror", "match the figure"))
     assert job.result == Path("/o/run-1/run-1.glb")
     assert job.work == Path("/o/run-1/work")
     assert job.made == Path("/o/run-1/work/hero_rigged_hands.glb")  # hero_hands.py names it after the model
@@ -27,19 +27,29 @@ def test_the_job_writes_the_glb_the_studio_looks_for():
 
 
 def test_the_left_hand_choice():
-    assert addon_run.plan(run_args("mirror")).argv[-2:] == ["--left", "mirror"]
-    assert addon_run.plan(run_args("own")).argv[-2:] == ["--left", "own"]
+    argv = addon_run.plan(run_args("own", "match the figure")).argv
+    assert argv[argv.index("--left") + 1] == "own"
     with pytest.raises(SystemExit):
-        addon_run.plan(run_args("both"))
+        addon_run.plan(run_args("both", "match the figure"))
+
+
+def test_the_hand_paint_choice():
+    # Pixal3D's clean-up paints a built hand darker and more saturated: by default it takes the figure's own tone
+    argv = addon_run.plan(run_args("mirror", "match the figure")).argv
+    assert argv[argv.index("--hand-paint") + 1] == "match"
+    argv = addon_run.plan(run_args("mirror", "as built")).argv
+    assert argv[argv.index("--hand-paint") + 1] == "keep"
+    with pytest.raises(SystemExit):
+        addon_run.plan(run_args("mirror", "bright"))
 
 
 @pytest.mark.parametrize("blank", ["", "  ", "-", "none", "As in the picture"])
 def test_a_blank_look_keeps_the_pictures_own(blank):
-    assert "--look" not in addon_run.plan(run_args("mirror", blank)).argv
+    assert "--look" not in addon_run.plan(run_args("mirror", "match the figure", blank)).argv
 
 
 def test_a_look_in_words_reaches_the_drawing():
-    argv = addon_run.plan(run_args("mirror", " black fingerless gloves ")).argv
+    argv = addon_run.plan(run_args("mirror", "match the figure", " black fingerless gloves ")).argv
     assert argv[argv.index("--look") + 1] == "black fingerless gloves"
 
 
@@ -53,9 +63,10 @@ def test_the_manifest_offers_what_the_runner_takes():
     (tool,) = manifest["tools"]
     inputs = {i["id"]: i for i in tool["inputs"]}
     assert tuple(inputs["left"]["choices"]) == addon_run.LEFT
+    assert tuple(inputs["paint"]["choices"]) == addon_run.PAINT
     run = tool["run"]
     after = run[run.index("--") + 1:]
-    assert after == ["{out}", "{model}", "{picture}", "{left}", "{look}"]
+    assert after == ["{out}", "{model}", "{picture}", "{left}", "{paint}", "{look}"]
     assert run[run.index("--python") + 1] == "addon_run.py"
     assert tool["makes"] == "glb"
 
@@ -116,7 +127,7 @@ def test_a_python_outside_any_install_has_no_root(tmp_path):
 
 
 def test_hand_over_copies_the_figure_and_its_numbers(tmp_path):
-    job = addon_run.plan(["--", str(tmp_path / "run-1"), "/m/hero_rigged.glb", "/p/hero.png", "mirror"])
+    job = addon_run.plan(["--", str(tmp_path / "run-1"), "/m/hero_rigged.glb", "/p/hero.png", "mirror", "as built"])
     job.work.mkdir(parents=True)
     job.made.write_bytes(b"glTF")
     (job.work / "hands.json").write_text("{}")
@@ -126,7 +137,7 @@ def test_hand_over_copies_the_figure_and_its_numbers(tmp_path):
 
 
 def test_hand_over_fails_when_no_figure_was_written(tmp_path, capsys):
-    job = addon_run.plan(["--", str(tmp_path / "run-1"), "/m/hero_rigged.glb", "/p/hero.png", "mirror"])
+    job = addon_run.plan(["--", str(tmp_path / "run-1"), "/m/hero_rigged.glb", "/p/hero.png", "mirror", "as built"])
     assert addon_run.hand_over(job) == 1
     assert "was not written" in capsys.readouterr().out
     assert not (tmp_path / "run-1" / "run-1.glb").exists()
